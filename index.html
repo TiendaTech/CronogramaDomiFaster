@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Domiciliarios - Domifaster</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2596be;
+            --success: #00b894;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --dark: hsl(0, 0, 0);
+            --text-main: #2b2d42;
+            --excel-color: #1d6f42;
+            --fish: #4cc9f0;
+            --premium-bg: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 10px;
+            color: var(--text-main);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 10px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.06);
+            position: relative;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .logo-text {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--dark);
+            letter-spacing: -1px;
+            margin: 0;
+            position: relative;
+            display: inline-block;
+        }
+
+        .logo-text span {
+            color: var(--primary);
+        }
+
+        .logo-sub {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #8d99ae;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            font-size: 1.4rem;
+            margin: 0 0 25px 0;
+            font-weight: 800;
+        }
+
+        /* --- HEADER ACTIONS --- */
+        .header-grid {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 12px;
+            margin-bottom: 25px;
+            align-items: center;
+        }
+
+        .search-area {
+            position: relative;
+        }
+
+        .search-area i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8d99ae;
+        }
+
+        .header-grid input,
+        .header-grid select {
+            padding: 14px 15px 14px 45px;
+            border-radius: 14px;
+            border: 2px solid #edf2f4;
+            outline: none;
+            width: 100%;
+            box-sizing: border-box;
+            transition: 0.3s;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            background: #fdfdfd;
+        }
+
+        .header-grid input:focus,
+        .header-grid select:focus {
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 5px rgba(37, 150, 190, 0.08);
+        }
+
+        .btn-header {
+            height: 52px;
+            padding: 0 24px;
+            border-radius: 14px;
+            border: none;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .btn-add {
+            background: var(--primary);
+        }
+
+        .btn-excel {
+            background: var(--excel-color);
+        }
+
+        .btn-add:hover,
+        .btn-excel:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+        }
+
+        /* --- TABS --- */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            background: #f1f3f5;
+            padding: 5px;
+            border-radius: 16px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 800;
+            color: #6c757d;
+            border-radius: 12px;
+            transition: 0.3s;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            background: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        /* --- VIEW SECTIONS --- */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- LISTA --- */
+        .dom-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .dom-row {
+            padding: 15px 25px;
+            background: var(--premium-bg);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            transition: 0.3s;
+        }
+
+        .dom-row:hover {
+            transform: translateX(5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            border-color: var(--primary);
+        }
+
+        .row-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+        }
+
+        .dom-name {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin: 0;
+            color: var(--dark);
+        }
+
+        .row-meta {
+            font-size: 0.85rem;
+            color: #6c757d;
+            display: flex;
+            gap: 15px;
+        }
+
+        .row-meta span b {
+            color: var(--dark);
+            font-weight: 800;
+        }
+
+        .sede-badge {
+            font-size: 0.7rem;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .sede-itagui {
+            background: #eef2ff;
+            color: #4f46e5;
+            border: 1px solid #e0e7ff;
+        }
+
+        .sede-calasanz {
+            background: #fff1f2;
+            color: #e11d48;
+            border: 1px solid #ffe4e6;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-act {
+            height: 42px;
+            padding: 0 15px;
+            border-radius: 12px;
+            border: 1.5px solid #edf2f4;
+            background: white;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-act:hover {
+            background: #f8f9fa;
+            border-color: #d1d9e6;
+            transform: scale(1.05);
+        }
+
+        .btn-edit {
+            color: var(--primary);
+        }
+
+        .btn-nov {
+            color: var(--warning);
+        }
+
+        .btn-del {
+            color: var(--danger);
+            padding: 0 12px;
+        }
+
+        @media (max-width: 768px) {
+            .dom-row {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+
+            .row-meta {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .actions {
+                flex-wrap: wrap;
+            }
+
+            .btn-act {
+                flex: 1;
+            }
+        }
+
+        /* --- CALENDARIO POR SEDE --- */
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .sede-selector {
+            display: flex;
+            background: #eee;
+            padding: 4px;
+            border-radius: 12px;
+        }
+
+        .sede-btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 0.8rem;
+            color: #777;
+            transition: 0.3s;
+        }
+
+        .sede-btn.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .weekly-container {
+            overflow-x: auto;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 20px;
+            border: 1px solid #eee;
+        }
+
+        .weekly-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            min-width: 1000px;
+        }
+
+        .day-col {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .day-head {
+            background: var(--primary);
+            color: white;
+            padding: 15px 10px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 800;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .day-head span {
+            font-size: 0.65rem;
+            opacity: 0.6;
+            font-weight: 400;
+        }
+
+        .day-body {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 18px;
+            padding: 10px;
+            min-height: 400px;
+            border: 1.5px dashed #ddd;
+        }
+
+        .sched-item {
+            padding: 12px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+            border-left: 5px solid var(--primary);
+            animation: slideIn 0.3s ease-out;
+            position: relative;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .sched-name {
+            font-weight: 800;
+            font-size: 0.9rem;
+            display: block;
+            color: var(--dark);
+        }
+
+        .sched-status {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .status-pico {
+            color: var(--warning);
+        }
+
+        .status-nov {
+            color: var(--danger);
+            font-style: italic;
+        }
+
+        .item-pico {
+            border-left-color: var(--warning);
+            background: #fffaf0;
+        }
+
+        .item-nov {
+            border-left-color: var(--danger);
+            background: #fff5f5;
+        }
+
+        /* --- MODAL MEJORADO --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 0;
+            border-radius: 28px;
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            background: var(--dark);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-header i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .modal-body {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .input-box {
+            position: relative;
+        }
+
+        .input-box label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #8d99ae;
+            margin-bottom: 8px;
+            padding-left: 5px;
+        }
+
+        .input-box i {
+            position: absolute;
+            left: 15px;
+            bottom: 14px;
+            color: var(--primary);
+            font-size: 1rem;
+        }
+
+        .input-box input,
+        .input-box select {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            border-radius: 14px;
+            border: 2px solid #edf2f4;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .input-box input:focus,
+        .input-box select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 150, 190, 0.1);
+        }
+
+        .modal-footer {
+            padding: 0 30px 30px 30px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-modal {
+            flex: 1;
+            height: 50px;
+            border-radius: 15px;
+            border: none;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .btn-confirm {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-close {
+            background: #f1f3f5;
+            color: #6c757d;
+        }
+
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 150, 190, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .header-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 15px;
+                border-radius: 0;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="logo-container">
+            <h2 class="logo-text" style="display: flex; align-items: center; justify-content: center; gap: 2px;">
+                <img src="LOGO.png" alt="D" style="height: 0.9em; object-fit: contain;">OMI<span>FASTER</span>
+            </h2>
+            <div class="logo-sub">Courier Service</div>
+        </div>
+
+        <h1>Centro de Gestión de Personal</h1>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('personal')">
+                <i class="fas fa-users-cog"></i> Personal
+            </div>
+            <div class="tab" onclick="switchTab('calendario')">
+                <i class="fas fa-calendar-alt"></i> Programación
+            </div>
+        </div>
+
+        <!-- Section: Personal -->
+        <div id="section-personal" class="view-section active">
+            <div class="header-grid">
+                <div class="search-area">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-dom" placeholder="Buscar por nombre o placa..."
+                        oninput="renderPersonal()">
+                </div>
+                <button class="btn-header btn-add" onclick="openModal()">
+                    <i class="fas fa-user-plus"></i> Nuevo
+                </button>
+                <button class="btn-header btn-excel" onclick="exportWeeklyExcel()">
+                    <i class="fas fa-file-excel"></i> Exportar
+                </button>
+            </div>
+
+            <div class="dom-list" id="personal-list">
+                <!-- Cards here -->
+            </div>
+        </div>
+
+        <!-- Section: Calendario -->
+        <div id="section-calendario" class="view-section">
+            <div class="calendar-controls">
+                <div class="sede-selector">
+                    <button class="sede-btn active" onclick="switchSedeView('Itagui')" id="btn-v-itagui">ITAGÜÍ</button>
+                    <button class="sede-btn" onclick="switchSedeView('Calasanz')" id="btn-v-calasanz">CALASANZ</button>
+                </div>
+
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn-act" style="flex:none; width:40px; height:40px;" onclick="changeWeek(-1)">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="week-display"
+                        style="font-weight: 800; font-size: 0.9rem; color: var(--primary); min-width: 140px; text-align: center;">---</span>
+                    <button class="btn-act" style="flex:none; width:40px; height:40px;" onclick="changeWeek(1)">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="weekly-container">
+                <div class="weekly-grid" id="calendar-grid">
+                    <!-- Days will be injected here -->
+                </div>
+            </div>
+        </div>
+
+        <div
+            style="text-align: center; margin-top: 40px; font-size: 0.7rem; color: #adb5bd; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;">
+            Domifaster Administrative System &bull; Version 3.0
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-dom" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-user-circle"></i>
+                <h2 id="modal-title">Nuevo Domiciliario</h2>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="dom-id">
+                <div class="input-box">
+                    <label>Nombre y Apellidos</label>
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="dom-name" placeholder="Ej: Carlos Mario Restrepo">
+                </div>
+                <div class="input-box">
+                    <label>Placa del Vehículo</label>
+                    <i class="fas fa-motorcycle"></i>
+                    <input type="text" id="dom-placa" placeholder="ABC-12D" maxlength="7"
+                        style="text-transform: uppercase;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="input-box">
+                        <label>Sede Asignada</label>
+                        <i class="fas fa-store"></i>
+                        <select id="dom-sede">
+                            <option value="Itagui">Itagüí</option>
+                            <option value="Calasanz">Calasanz</option>
+                        </select>
+                    </div>
+                    <div class="input-box">
+                        <label>Pico y Placa</label>
+                        <i class="fas fa-ban"></i>
+                        <select id="dom-pico">
+                            <option value="">Ninguno</option>
+                            <option value="1">Lunes</option>
+                            <option value="2">Martes</option>
+                            <option value="3">Miércoles</option>
+                            <option value="4">Jueves</option>
+                            <option value="5">Viernes</option>
+                            <option value="6">Sábado</option>
+                            <option value="0">Domingo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-box" style="margin-top: 15px;">
+                    <label>Día de Descanso Fijo</label>
+                    <i class="fas fa-bed"></i>
+                    <select id="dom-descanso">
+                        <option value="">Ninguno</option>
+                        <option value="1">Lunes</option>
+                        <option value="2">Martes</option>
+                        <option value="3">Miércoles</option>
+                        <option value="4">Jueves</option>
+                        <option value="5">Viernes</option>
+                        <option value="6">Sábado</option>
+                        <option value="0">Domingo</option>
+                        <option value="JHON_VEGA">Intercalado Dom/Lun (Jhon Vega)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-confirm" onclick="saveDom()">Confirmar</button>
+                <button class="btn-modal btn-close" onclick="closeModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Novedad -->
+    <div id="modal-nov" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header" style="background: var(--warning);">
+                <i class="fas fa-calendar-plus" style="color: white;"></i>
+                <h2 id="nov-target">Gestión de Novedades</h2>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; gap: 10px; align-items: flex-end; margin-bottom: 10px;">
+                    <div class="input-box" style="flex: 1;">
+                        <label>Fecha</label>
+                        <i class="fas fa-calendar-day"></i>
+                        <input type="date" id="nov-date">
+                    </div>
+                    <div class="input-box" style="flex: 2;">
+                        <label>Motivo</label>
+                        <i class="fas fa-info-circle"></i>
+                        <input type="text" id="nov-reason" placeholder="Ej: Incapacidad">
+                    </div>
+                    <button class="btn-act"
+                        style="background: var(--warning); color: white; border: none; height: 50px; padding: 0 20px; border-radius: 14px;"
+                        onclick="saveNov()">Agregar</button>
+                </div>
+
+                <h3
+                    style="font-size: 0.9rem; color: #6c757d; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
+                    Novedades Registradas</h3>
+                <div id="nov-list"
+                    style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                    <!-- List of novelties -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-close" onclick="closeModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue, update, remove, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDQn0bwqT5Y0LmAKqoNUFenR9ZezZnqJfA",
+            authDomain: "base-de-datos-domifaster.firebaseapp.com",
+            databaseURL: "https://base-de-datos-domifaster-default-rtdb.firebaseio.com",
+            projectId: "base-de-datos-domifaster",
+            storageBucket: "base-de-datos-domifaster.firebasestorage.app",
+            messagingSenderId: "429316461878",
+            appId: "1:429316461878:web:d1f4141c02b54549858f97",
+            measurementId: "G-39TSPK9171"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const schedRef = ref(db, 'programacion_domis');
+
+        let domiciliarios = [];
+        let currentWeekOffset = 0;
+        let activeSedeView = 'Itagui';
+
+        // Escuchar cambios en Firebase
+        onValue(schedRef, (snapshot) => {
+            const data = snapshot.val();
+            domiciliarios = data ? Object.values(data) : [];
+            renderPersonal();
+            renderCalendar();
+        });
+
+        window.switchTab = function(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+
+            if (tab === 'personal') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('section-personal').classList.add('active');
+                renderPersonal();
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('section-calendario').classList.add('active');
+                renderCalendar();
+            }
+        }
+
+        window.switchSedeView = function(sede) {
+            activeSedeView = sede;
+            document.querySelectorAll('.sede-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-v-' + sede.toLowerCase()).classList.add('active');
+            renderCalendar();
+        }
+
+        window.openModal = function(id = null) {
+            const modal = document.getElementById('modal-dom');
+            const title = document.getElementById('modal-title');
+            if (id) {
+                const dom = domiciliarios.find(d => d.id == id);
+                document.getElementById('dom-id').value = dom.id;
+                document.getElementById('dom-name').value = dom.name;
+                document.getElementById('dom-placa').value = dom.placa;
+                document.getElementById('dom-sede').value = dom.sede;
+                document.getElementById('dom-pico').value = dom.pico;
+                document.getElementById('dom-descanso').value = dom.descanso || '';
+                title.innerText = "Editar Domiciliario";
+            } else {
+                document.getElementById('dom-id').value = '';
+                document.getElementById('dom-name').value = '';
+                document.getElementById('dom-placa').value = '';
+                document.getElementById('dom-sede').value = 'Itagui';
+                document.getElementById('dom-pico').value = '';
+                document.getElementById('dom-descanso').value = '';
+                title.innerText = "Nuevo Domiciliario";
+            }
+            modal.style.display = 'flex';
+        }
+
+        let novDomId = null;
+        window.openNov = function(id) {
+            novDomId = id;
+            const dom = domiciliarios.find(d => d.id == id);
+            document.getElementById('nov-target').innerText = "Novedad: " + dom.name;
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('nov-date').value = tomorrow.toISOString().split('T')[0];
+            document.getElementById('nov-reason').value = '';
+
+            renderNovList();
+            document.getElementById('modal-nov').style.display = 'flex';
+        }
+
+        window.renderNovList = function() {
+            const list = document.getElementById('nov-list');
+            list.innerHTML = '';
+            const dom = domiciliarios.find(d => d.id == novDomId);
+            if (!dom || !dom.novedades || Object.keys(dom.novedades).length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding: 20px; color: #aaa; font-size: 0.8rem;">No hay novedades registradas</div>';
+                return;
+            }
+
+            const dates = Object.keys(dom.novedades).sort();
+            dates.forEach(date => {
+                const row = document.createElement('div');
+                row.style.cssText = "display: flex; gap: 10px; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 10px;";
+                row.innerHTML = `
+                    <div style="font-weight: 800; font-size: 0.8rem; color: var(--primary); min-width: 90px;">${date}</div>
+                    <input type="text" value="${dom.novedades[date]}" onchange="editNov('${date}', this.value)" style="flex: 1; border: 1px solid #ddd; padding: 5px 10px; border-radius: 8px; font-family: 'Outfit'; outline: none; font-size:0.85rem;">
+                    <button class="btn-act btn-del" style="height: 30px; width: 30px; padding: 0; min-width: 30px;" onclick="deleteNov('${date}')"><i class="fas fa-trash"></i></button>
+                `;
+                list.appendChild(row);
+            });
+        }
+
+        window.editNov = function(date, newReason) {
+            if (newReason.trim() === "") { deleteNov(date); return; }
+            const novPath = `programacion_domis/${novDomId}/novedades`;
+            update(ref(db, novPath), { [date]: newReason.trim() });
+        }
+
+        window.deleteNov = function(date) {
+            remove(ref(db, `programacion_domis/${novDomId}/novedades/${date}`));
+            setTimeout(renderNovList, 500);
+        }
+
+        window.closeModal = function() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+        }
+
+        window.saveDom = function() {
+            const idInput = document.getElementById('dom-id').value;
+            const id = idInput || Date.now();
+            const name = document.getElementById('dom-name').value.trim();
+            const placa = document.getElementById('dom-placa').value.trim().toUpperCase();
+            const sede = document.getElementById('dom-sede').value;
+            const pico = document.getElementById('dom-pico').value;
+            const descanso = document.getElementById('dom-descanso').value;
+
+            if (!name || !placa) return alert("Complete los campos requeridos");
+
+            const domData = { id, name, placa, sede, pico, descanso };
+            
+            if (idInput) {
+                const old = domiciliarios.find(d => d.id == id);
+                if (old && old.novedades) domData.novedades = old.novedades;
+            } else {
+                domData.novedades = {};
+            }
+
+            set(ref(db, 'programacion_domis/' + id), domData);
+            closeModal();
+        }
+
+        window.saveNov = function() {
+            const date = document.getElementById('nov-date').value;
+            const reason = document.getElementById('nov-reason').value.trim() || "Novedad general";
+            if (!date) return alert("Indique la fecha");
+
+            const novPath = `programacion_domis/${novDomId}/novedades`;
+            update(ref(db, novPath), { [date]: reason });
+
+            document.getElementById('nov-reason').value = '';
+            setTimeout(renderNovList, 500);
+        }
+
+        window.deleteDom = function(id) {
+            if (confirm("¿Eliminar registro permanentemente?")) {
+                remove(ref(db, 'programacion_domis/' + id));
+            }
+        }
+
+        window.renderPersonal = function() {
+            const list = document.getElementById('personal-list');
+            if (!list) return;
+            const search = document.getElementById('search-dom').value.toLowerCase();
+            list.innerHTML = '';
+
+            const filtered = domiciliarios.filter(d =>
+                d.name.toLowerCase().includes(search) || d.placa.toLowerCase().includes(search)
+            );
+
+            filtered.forEach(dom => {
+                const card = document.createElement('div');
+                card.className = 'dom-row';
+                card.innerHTML = `
+                    <div class="row-info">
+                        <h3 class="dom-name">${dom.name}</h3>
+                        <div class="row-meta">
+                            <span><b>Placa:</b> ${dom.placa}</span>
+                            <span><b>Pico/Placa:</b> ${getPicoName(dom.pico)}</span>
+                            <span><b>Descanso:</b> ${getDescansoName(dom.descanso)}</span>
+                        </div>
+                    </div>
+                    <span class="sede-badge sede-${dom.sede.toLowerCase()}">${dom.sede}</span>
+                    <div class="actions">
+                        <button class="btn-act btn-edit" onclick="openModal(${dom.id})"><i class="fas fa-edit"></i> Editar</button>
+                        <button class="btn-act btn-nov" onclick="openNov(${dom.id})"><i class="fas fa-calendar-plus"></i> Novedad</button>
+                        <button class="btn-act btn-del" onclick="deleteDom(${dom.id})"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+
+            if (filtered.length === 0) list.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; opacity:0.3;">Sin registros encontrados</div>`;
+        }
+
+        function getPicoName(pico) {
+            const days = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            return (pico === "" || pico === undefined) ? "Sin asignar" : days[pico];
+        }
+
+        function getDescansoName(descanso) {
+            if (!descanso) return "Ninguno";
+            if (descanso === "JHON_VEGA") return "Dom/Lun Intercalado";
+            const days = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            return days[descanso];
+        }
+
+        function getJhonVegaDescanso(d) {
+            const refDate = Date.UTC(2000, 0, 2); // Sunday
+            const current = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+            const daysDiff = Math.floor((current - refDate) / 86400000);
+            const weekParity = Math.floor(daysDiff / 7) % 2; 
+            return weekParity === 0 ? 1 : 0; // Invertido para que la semana actual sea Lunes
+        }
+
+        window.changeWeek = function(offset) {
+            currentWeekOffset += offset;
+            renderCalendar();
+        }
+
+        window.renderCalendar = function() {
+            const grid = document.getElementById('calendar-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const daysArr = ["DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO"];
+            const today = new Date();
+            const first = new Date(today.setDate(today.getDate() - today.getDay() + (currentWeekOffset * 7)));
+
+            const last = new Date(first);
+            last.setDate(last.getDate() + 6);
+            const weekDisp = document.getElementById('week-display');
+            if (weekDisp) weekDisp.innerText = `${first.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} - ${last.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}`;
+
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(first);
+                d.setDate(d.getDate() + i);
+                const dateStr = d.toISOString().split('T')[0];
+                const dayNum = d.getDay();
+
+                const col = document.createElement('div');
+                col.className = 'day-col';
+
+                col.innerHTML = `
+                    <div class="day-head">
+                        ${daysArr[dayNum]}
+                        <span>${d.getDate()} / ${d.getMonth() + 1}</span>
+                    </div>
+                    <div class="day-body" id="day-body-${i}"></div>
+                `;
+                grid.appendChild(col);
+
+                const body = col.querySelector(`#day-body-${i}`);
+
+                domiciliarios.filter(dom => dom.sede === activeSedeView).forEach(dom => {
+                    const isPico = dom.pico !== "" && dom.pico == dayNum;
+                    const isAbsent = dom.novedades && dom.novedades[dateStr];
+
+                    let isDescansoFijo = false;
+                    if (dom.descanso) {
+                        if (dom.descanso === "JHON_VEGA") {
+                            if (dayNum === getJhonVegaDescanso(d)) isDescansoFijo = true;
+                        } else {
+                            if (dayNum == dom.descanso) isDescansoFijo = true;
+                        }
+                    }
+
+                    const isDescansoOrNov = isAbsent || isDescansoFijo;
+
+                    const item = document.createElement('div');
+                    item.className = `sched-item ${isPico ? 'item-pico' : ''} ${isDescansoOrNov ? 'item-nov' : ''}`;
+                    item.style.cursor = 'pointer';
+                    item.onclick = () => openNov(dom.id);
+
+                    let statusHtml = '';
+                    if (isPico) statusHtml += `<span class="sched-status status-pico">Pico y Placa</span>`;
+                    if (isDescansoFijo) statusHtml += `<span class="sched-status status-nov" style="color:var(--success);">Descanso Fijo</span>`;
+                    if (isAbsent) statusHtml += `<span class="sched-status status-nov">Nov: ${dom.novedades[dateStr]}</span>`;
+
+                    item.innerHTML = `
+                        <span class="sched-name">${dom.name}</span>
+                        ${statusHtml}
+                    `;
+                    if (isDescansoFijo && !isAbsent) item.style.borderLeftColor = 'var(--success)';
+
+                    body.appendChild(item);
+                });
+            }
+        }
+
+        window.exportWeeklyExcel = async function() {
+            const workbook = new ExcelJS.Workbook();
+            const sheet = workbook.addWorksheet('Programación Domifaster');
+
+            const today = new Date();
+            const first = new Date(today.setDate(today.getDate() - today.getDay() + (currentWeekOffset * 7)));
+            const daysArr = ["DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO"];
+
+            sheet.columns = [
+                { header: 'Día', key: 'dia', width: 20 },
+                { header: 'Fecha', key: 'fecha', width: 15 },
+                { header: 'Sede', key: 'sede', width: 15 },
+                { header: 'Domiciliario', key: 'nombre', width: 30 },
+                { header: 'Estado', key: 'estado', width: 25 }
+            ];
+
+            ['Itagui', 'Calasanz'].forEach(sede => {
+                for (let i = 0; i < 7; i++) {
+                    const d = new Date(first);
+                    d.setDate(d.getDate() + i);
+                    const dateStr = d.toISOString().split('T')[0];
+                    const dayNum = d.getDay();
+
+                    domiciliarios.filter(dom => dom.sede === sede).forEach(dom => {
+                        const isPico = dom.pico !== "" && dom.pico == dayNum;
+                        const isAbsent = dom.novedades && dom.novedades[dateStr];
+
+                        let isDescansoFijo = false;
+                        if (dom.descanso) {
+                            if (dom.descanso === "JHON_VEGA") {
+                                if (dayNum === getJhonVegaDescanso(d)) isDescansoFijo = true;
+                            } else {
+                                if (dayNum == dom.descanso) isDescansoFijo = true;
+                            }
+                        }
+
+                        let estado = 'Normal';
+                        if (isPico) estado = 'Pico y Placa';
+                        if (isDescansoFijo) estado = estado === 'Normal' ? 'Descanso Fijo' : estado + ' / Descanso Fijo';
+                        if (isAbsent) estado = estado === 'Normal' ? 'Novedad: ' + dom.novedades[dateStr] : estado + ' / Nov: ' + dom.novedades[dateStr];
+
+                        sheet.addRow({
+                            dia: daysArr[dayNum],
+                            fecha: dateStr,
+                            sede: dom.sede,
+                            nombre: dom.name,
+                            estado: estado
+                        });
+                    });
+                }
+                sheet.addRow({});
+            });
+
+            sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2596BE' } };
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            saveAs(new Blob([buffer]), `Programacion_Domifaster_Semana_${first.toLocaleDateString()}.xlsx`);
+        }
+
+        window.onload = () => {
+            const stored = localStorage.getItem('domifaster_data');
+            if (stored) {
+                const local = JSON.parse(stored);
+                if (Array.isArray(local) && local.length > 0) {
+                    onValue(schedRef, (snap) => {
+                        if (!snap.exists()) {
+                            local.forEach(d => set(ref(db, 'programacion_domis/' + d.id), d));
+                        }
+                    }, { onlyOnce: true });
+                }
+            }
+            renderPersonal();
+        };
+        window.onclick = (e) => { if (e.target.className === 'modal-overlay') closeModal(); };
+    </script>
+</body>
+</html>
