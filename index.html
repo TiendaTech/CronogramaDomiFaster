@@ -814,6 +814,10 @@
         body.role-admin .admin-only.btn-header { display: flex !important; }
         body.role-admin .admin-only.tab { display: flex !important; }
         body.role-admin .admin-only.btn-act { display: flex !important; }
+
+        .admin-super { display: none; }
+        body.role-admin .admin-super,
+        body.role-supervisor .admin-super { display: flex !important; }
     </style>
 </head>
 
@@ -841,7 +845,7 @@
         <h1>Centro de Gestión de Personal</h1>
 
         <div class="tabs">
-            <div class="tab active admin-only" onclick="switchTab('personal')">
+            <div class="tab active admin-super" onclick="switchTab('personal')">
                 <i class="fas fa-users-cog"></i> Personal
             </div>
             <div class="tab" onclick="switchTab('calendario')" id="tab-calendario">
@@ -1115,7 +1119,8 @@
 
         let novDomId = null;
         window.openNov = function(id) {
-            if (sessionStorage.getItem('domi_role') !== 'admin') return; 
+            const role = sessionStorage.getItem('domi_role');
+            if (role !== 'admin' && role !== 'supervisor') return; 
             novDomId = id;
             const dom = domiciliarios.find(d => d.id == id);
             document.getElementById('nov-target').innerText = "Novedad: " + dom.name;
@@ -1232,10 +1237,10 @@
                             <span><b>Descanso:</b> ${getDescansoName(dom.descanso)}</span>
                         </div>
                     </div>
-                    <div class="actions admin-only">
-                        <button class="btn-act btn-edit" onclick="openModal(${dom.id})" title="Editar"><i class="fas fa-edit"></i> <span class="btn-text">Editar</span></button>
-                        <button class="btn-act btn-nov" onclick="openNov(${dom.id})" title="Novedad"><i class="fas fa-calendar-plus"></i> <span class="btn-text">Novedad</span></button>
-                        <button class="btn-act btn-del" onclick="deleteDom(${dom.id})" title="Eliminar"><i class="fas fa-trash"></i></button>
+                    <div class="actions">
+                        <button class="btn-act btn-edit admin-only" onclick="openModal(${dom.id})" title="Editar"><i class="fas fa-edit"></i> <span class="btn-text">Editar</span></button>
+                        <button class="btn-act btn-nov admin-super" onclick="openNov(${dom.id})" title="Novedad"><i class="fas fa-calendar-plus"></i> <span class="btn-text">Novedad</span></button>
+                        <button class="btn-act btn-del admin-only" onclick="deleteDom(${dom.id})" title="Eliminar"><i class="fas fa-trash"></i></button>
                     </div>
                 `;
                 list.appendChild(card);
@@ -1320,8 +1325,8 @@
 
                     const item = document.createElement('div');
                     item.className = `sched-item ${isPico ? 'item-pico' : ''} ${isDescansoOrNov ? 'item-nov' : ''}`;
-                    const isSupervisor = sessionStorage.getItem('domi_role') === 'supervisor';
-                    if (!isSupervisor) {
+                    const role = sessionStorage.getItem('domi_role');
+                    if (role === 'admin' || role === 'supervisor') {
                         item.style.cursor = 'pointer';
                         item.onclick = () => openNov(dom.id);
                     }
