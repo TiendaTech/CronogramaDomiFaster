@@ -324,26 +324,6 @@
             padding: 0 12px;
         }
 
-        @media (max-width: 768px) {
-            .dom-row {
-                flex-direction: column;
-                align-items: stretch;
-                text-align: center;
-            }
-
-            .row-meta {
-                flex-direction: column;
-                gap: 5px;
-            }
-
-            .actions {
-                flex-wrap: wrap;
-            }
-
-            .btn-act {
-                flex: 1;
-            }
-        }
 
         /* --- CALENDARIO POR SEDE --- */
         .calendar-controls {
@@ -623,17 +603,130 @@
             box-shadow: 0 5px 15px rgba(37, 150, 190, 0.3);
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             .header-grid {
                 grid-template-columns: 1fr;
+                gap: 10px;
             }
 
             .container {
                 padding: 15px;
                 border-radius: 0;
                 margin: 0;
+                max-width: 100%;
+            }
+
+            .logo-text {
+                font-size: 1.8rem;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .tab {
+                font-size: 0.8rem;
+                padding: 10px 5px;
+            }
+
+            .dom-list {
+                gap: 10px;
+            }
+
+            .dom-row {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 12px 15px;
+                gap: 10px;
+            }
+
+            .row-info {
+                text-align: center;
+            }
+
+            .dom-name {
+                font-size: 1.1rem;
+            }
+
+            .btn-text {
+                display: none;
+            }
+
+            .name-header {
+                justify-content: center !important;
+            }
+
+            .row-meta {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 8px 12px;
+                justify-content: center;
+                font-size: 0.8rem;
+            }
+
+            .sede-badge {
+                padding: 4px 10px;
+                font-size: 0.65rem;
+            }
+
+            .actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 8px;
+            }
+
+            .btn-act {
+                height: 42px;
+                font-size: 1rem;
+                min-width: 0;
+            }
+
+            .btn-del {
+                grid-column: unset;
+                height: 42px;
+            }
+
+            .calendar-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .sede-selector {
+                justify-content: center;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 10px;
+                max-height: 95vh;
+                overflow-y: auto;
+            }
+
+            .modal-body {
+                padding: 15px;
+            }
+
+            .modal-footer {
+                padding: 0 15px 15px 15px;
+                flex-direction: column;
+            }
+
+            .modal-header {
+                padding: 20px;
+            }
+
+            /* Mejora para el formulario de novedades en movil */
+            .modal-body > div[style*="display: flex"] {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+
+            .modal-body > div[style*="display: flex"] .btn-act {
+                height: 50px;
+                margin-top: 5px;
             }
         }
+
     </style>
 </head>
 
@@ -1002,18 +1095,20 @@
                 card.className = 'dom-row';
                 card.innerHTML = `
                     <div class="row-info">
-                        <h3 class="dom-name">${dom.name}</h3>
+                        <div class="name-header" style="display:flex; align-items:center; gap:10px; justify-content: inherit;">
+                            <h3 class="dom-name">${dom.name}</h3>
+                            <span class="sede-badge sede-${dom.sede.toLowerCase()}">${dom.sede}</span>
+                        </div>
                         <div class="row-meta">
                             <span><b>Placa:</b> ${dom.placa}</span>
                             <span><b>Pico/Placa:</b> ${getPicoName(dom.pico)}</span>
                             <span><b>Descanso:</b> ${getDescansoName(dom.descanso)}</span>
                         </div>
                     </div>
-                    <span class="sede-badge sede-${dom.sede.toLowerCase()}">${dom.sede}</span>
                     <div class="actions">
-                        <button class="btn-act btn-edit" onclick="openModal(${dom.id})"><i class="fas fa-edit"></i> Editar</button>
-                        <button class="btn-act btn-nov" onclick="openNov(${dom.id})"><i class="fas fa-calendar-plus"></i> Novedad</button>
-                        <button class="btn-act btn-del" onclick="deleteDom(${dom.id})"><i class="fas fa-trash"></i></button>
+                        <button class="btn-act btn-edit" onclick="openModal(${dom.id})" title="Editar"><i class="fas fa-edit"></i> <span class="btn-text">Editar</span></button>
+                        <button class="btn-act btn-nov" onclick="openNov(${dom.id})" title="Novedad"><i class="fas fa-calendar-plus"></i> <span class="btn-text">Novedad</span></button>
+                        <button class="btn-act btn-del" onclick="deleteDom(${dom.id})" title="Eliminar"><i class="fas fa-trash"></i></button>
                     </div>
                 `;
                 list.appendChild(card);
