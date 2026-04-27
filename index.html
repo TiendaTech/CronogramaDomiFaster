@@ -689,6 +689,19 @@
             .calendar-controls {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 15px;
+            }
+
+            .calendar-controls > div[style*="display: flex"] {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .calendar-controls .btn-excel {
+                width: 100%;
+                margin-right: 0 !important;
+                margin-bottom: 10px;
+                order: -1;
             }
 
             .sede-selector {
@@ -726,11 +739,96 @@
                 margin-top: 5px;
             }
         }
+        /* --- AUTH OVERLAY --- */
+        #auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(15px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+            box-sizing: border-box;
+        }
 
+        .auth-card {
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .auth-card img {
+            height: 60px;
+            margin-bottom: 20px;
+        }
+
+        .auth-card h2 {
+            margin-bottom: 30px;
+            color: var(--primary);
+            font-weight: 800;
+        }
+
+        .auth-card input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #eee;
+            margin-bottom: 20px;
+            outline: none;
+            font-family: 'Outfit';
+            font-size: 1rem;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .auth-card button {
+            width: 100%;
+            padding: 15px;
+            border-radius: 15px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-weight: 800;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+
+        .auth-card button:hover {
+            transform: scale(1.02);
+            filter: brightness(1.1);
+        }
+
+        /* Role specific visibility */
+        .admin-only { display: none; }
+        body.role-admin .admin-only { display: flex !important; }
+        body.role-admin .admin-only.btn-header { display: flex !important; }
+        body.role-admin .admin-only.tab { display: flex !important; }
+        body.role-admin .admin-only.btn-act { display: flex !important; }
     </style>
 </head>
 
 <body>
+
+    <!-- Auth Overlay -->
+    <div id="auth-overlay">
+        <div class="auth-card">
+            <img src="LOGO.png" alt="Logo">
+            <h2>Acceso al Sistema</h2>
+            <input type="password" id="auth-pass" placeholder="Ingrese su clave">
+            <button onclick="checkAuth()">Ingresar</button>
+            <p id="auth-error" style="color:var(--danger); margin-top:15px; font-size:0.8rem; display:none; font-weight:700;">Clave incorrecta</p>
+        </div>
+    </div>
 
     <div class="container">
         <div class="logo-container">
@@ -743,10 +841,10 @@
         <h1>Centro de Gestión de Personal</h1>
 
         <div class="tabs">
-            <div class="tab active" onclick="switchTab('personal')">
+            <div class="tab active admin-only" onclick="switchTab('personal')">
                 <i class="fas fa-users-cog"></i> Personal
             </div>
-            <div class="tab" onclick="switchTab('calendario')">
+            <div class="tab" onclick="switchTab('calendario')" id="tab-calendario">
                 <i class="fas fa-calendar-alt"></i> Programación
             </div>
         </div>
@@ -759,7 +857,7 @@
                     <input type="text" id="search-dom" placeholder="Buscar por nombre o placa..."
                         oninput="renderPersonal()">
                 </div>
-                <button class="btn-header btn-add" onclick="openModal()">
+                <button class="btn-header btn-add admin-only" onclick="openModal()">
                     <i class="fas fa-user-plus"></i> Nuevo
                 </button>
                 <button class="btn-header btn-excel" onclick="exportWeeklyExcel()">
@@ -781,6 +879,9 @@
                 </div>
 
                 <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn-header btn-excel" onclick="exportWeeklyExcel()" style="height:40px; font-size:0.7rem; padding:0 15px; margin-right:10px;">
+                        <i class="fas fa-file-excel"></i> Exportar
+                    </button>
                     <button class="btn-act" style="flex:none; width:40px; height:40px;" onclick="changeWeek(-1)">
                         <i class="fas fa-chevron-left"></i>
                     </button>
@@ -933,6 +1034,31 @@
         let currentWeekOffset = 0;
         let activeSedeView = 'Itagui';
 
+        window.checkAuth = function() {
+            const pass = document.getElementById('auth-pass').value;
+            const error = document.getElementById('auth-error');
+            if (pass === "Admin$DomiFas") {
+                sessionStorage.setItem('domi_role', 'admin');
+                initApp('admin');
+            } else if (pass === "Super.DomiFas") {
+                sessionStorage.setItem('domi_role', 'supervisor');
+                initApp('supervisor');
+            } else {
+                error.style.display = 'block';
+            }
+        }
+
+        function initApp(role) {
+            document.getElementById('auth-overlay').style.display = 'none';
+            document.body.className = document.body.className.replace(/role-\w+/g, '');
+            document.body.classList.add('role-' + role);
+            if (role === 'supervisor') {
+                switchTab('calendario');
+            }
+            renderPersonal();
+            renderCalendar();
+        }
+
         // Escuchar cambios en Firebase
         onValue(schedRef, (snapshot) => {
             const data = snapshot.val();
@@ -989,6 +1115,7 @@
 
         let novDomId = null;
         window.openNov = function(id) {
+            if (sessionStorage.getItem('domi_role') !== 'admin') return; 
             novDomId = id;
             const dom = domiciliarios.find(d => d.id == id);
             document.getElementById('nov-target').innerText = "Novedad: " + dom.name;
@@ -1105,7 +1232,7 @@
                             <span><b>Descanso:</b> ${getDescansoName(dom.descanso)}</span>
                         </div>
                     </div>
-                    <div class="actions">
+                    <div class="actions admin-only">
                         <button class="btn-act btn-edit" onclick="openModal(${dom.id})" title="Editar"><i class="fas fa-edit"></i> <span class="btn-text">Editar</span></button>
                         <button class="btn-act btn-nov" onclick="openNov(${dom.id})" title="Novedad"><i class="fas fa-calendar-plus"></i> <span class="btn-text">Novedad</span></button>
                         <button class="btn-act btn-del" onclick="deleteDom(${dom.id})" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -1193,8 +1320,11 @@
 
                     const item = document.createElement('div');
                     item.className = `sched-item ${isPico ? 'item-pico' : ''} ${isDescansoOrNov ? 'item-nov' : ''}`;
-                    item.style.cursor = 'pointer';
-                    item.onclick = () => openNov(dom.id);
+                    const isSupervisor = sessionStorage.getItem('domi_role') === 'supervisor';
+                    if (!isSupervisor) {
+                        item.style.cursor = 'pointer';
+                        item.onclick = () => openNov(dom.id);
+                    }
 
                     let statusHtml = '';
                     if (isPico) statusHtml += `<span class="sched-status status-pico">Pico y Placa</span>`;
@@ -1273,6 +1403,11 @@
         }
 
         window.onload = () => {
+            const savedRole = sessionStorage.getItem('domi_role');
+            if (savedRole) {
+                initApp(savedRole);
+            }
+
             const stored = localStorage.getItem('domifaster_data');
             if (stored) {
                 const local = JSON.parse(stored);
