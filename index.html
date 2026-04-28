@@ -816,8 +816,11 @@
         body.role-admin .admin-only.btn-act { display: flex !important; }
 
         .admin-super { display: none; }
-        body.role-admin .admin-super,
-        body.role-supervisor .admin-super { display: flex !important; }
+        body.role-admin .admin-super { display: flex !important; }
+
+        .admin-super-tab { display: none; }
+        body.role-admin .admin-super-tab,
+        body.role-supervisor .admin-super-tab { display: flex !important; }
     </style>
 </head>
 
@@ -845,10 +848,10 @@
         <h1>Centro de Gestión de Personal</h1>
 
         <div class="tabs">
-            <div class="tab active admin-super" onclick="switchTab('personal')">
+            <div class="tab active admin-only" onclick="switchTab('personal')">
                 <i class="fas fa-users-cog"></i> Personal
             </div>
-            <div class="tab" onclick="switchTab('calendario')" id="tab-calendario">
+            <div class="tab admin-super-tab" onclick="switchTab('calendario')" id="tab-calendario">
                 <i class="fas fa-calendar-alt"></i> Programación
             </div>
         </div>
@@ -985,7 +988,7 @@
                 <h2 id="nov-target">Gestión de Novedades</h2>
             </div>
             <div class="modal-body">
-                <div style="display: flex; gap: 10px; align-items: flex-end; margin-bottom: 10px;">
+                <div class="nov-form-grid" style="display: flex; gap: 10px; align-items: flex-end; margin-bottom: 20px;">
                     <div class="input-box" style="flex: 1;">
                         <label>Fecha</label>
                         <i class="fas fa-calendar-day"></i>
@@ -997,9 +1000,21 @@
                         <input type="text" id="nov-reason" placeholder="Ej: Incapacidad">
                     </div>
                     <button class="btn-act"
-                        style="background: var(--warning); color: white; border: none; height: 50px; padding: 0 20px; border-radius: 14px;"
+                        style="background: var(--warning); color: white; border: none; height: 50px; padding: 0 20px; border-radius: 14px; flex-shrink: 0;"
                         onclick="saveNov()">Agregar</button>
                 </div>
+
+                <style>
+                    @media (max-width: 600px) {
+                        .nov-form-grid {
+                            flex-direction: column;
+                            align-items: stretch !important;
+                        }
+                        .nov-form-grid .btn-act {
+                            width: 100%;
+                        }
+                    }
+                </style>
 
                 <h3
                     style="font-size: 0.9rem; color: #6c757d; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
@@ -1041,11 +1056,15 @@
         window.checkAuth = function() {
             const pass = document.getElementById('auth-pass').value;
             const error = document.getElementById('auth-error');
+            const expiry = Date.now() + (8 * 60 * 60 * 1000); // 8 horas
+            
             if (pass === "Admin$DomiFas") {
-                sessionStorage.setItem('domi_role', 'admin');
+                localStorage.setItem('domi_role', 'admin');
+                localStorage.setItem('domi_expiry', expiry);
                 initApp('admin');
             } else if (pass === "Super.DomiFas") {
-                sessionStorage.setItem('domi_role', 'supervisor');
+                localStorage.setItem('domi_role', 'supervisor');
+                localStorage.setItem('domi_expiry', expiry);
                 initApp('supervisor');
             } else {
                 error.style.display = 'block';
@@ -1119,7 +1138,7 @@
 
         let novDomId = null;
         window.openNov = function(id) {
-            const role = sessionStorage.getItem('domi_role');
+            const role = localStorage.getItem('domi_role');
             if (role !== 'admin' && role !== 'supervisor') return; 
             novDomId = id;
             const dom = domiciliarios.find(d => d.id == id);
@@ -1212,15 +1231,77 @@
             }
         }
 
+        // Función de ordenamiento unificada
+        function sortDomis(list, dayNum = null, dateStr = null, dateObj = null) {
+            return list.sort((a, b) => {
+                let aPrio = 0;
+                let bPrio = 0;
+
+                // Si se proporciona un contexto de fecha (Calendario)
+                if (dayNum !== null && dateStr !== null) {
+                    const aPico = a.pico !== "" && a.pico == dayNum;
+                    const bPico = b.pico !== "" && b.pico == dayNum;
+                    const aNov = a.novedades && a.novedades[dateStr];
+                    const bNov = b.novedades && b.novedades[dateStr];
+                    
+                    let aDesc = false;
+                    if (a.descanso) {
+                        if (a.descanso === "JHON_VEGA") {
+                            if (dayNum === getJhonVegaDescanso(dateObj)) aDesc = true;
+                        } else if (dayNum == a.descanso) aDesc = true;
+                    }
+
+                    let bDesc = false;
+                    if (b.descanso) {
+                        if (b.descanso === "JHON_VEGA") {
+                            if (dayNum === getJhonVegaDescanso(dateObj)) bDesc = true;
+                        } else if (dayNum == b.descanso) bDesc = true;
+                    }
+
+                    if (aPico || aNov || aDesc) aPrio = 1;
+                    if (bPico || bNov || bDesc) bPrio = 1;
+                } else {
+                    // En Vista Personal: Prioridad si tienen Pico/Descanso HOY o alguna novedad registrada
+                    const today = new Date();
+                    const tDay = today.getDay();
+                    const tDate = today.toISOString().split('T')[0];
+
+                    const aPico = a.pico !== "" && a.pico == tDay;
+                    const bPico = b.pico !== "" && b.pico == tDay;
+                    const aNov = (a.novedades && Object.keys(a.novedades).length > 0);
+                    const bNov = (b.novedades && Object.keys(b.novedades).length > 0);
+
+                    let aDesc = false;
+                    if (a.descanso) {
+                        if (a.descanso === "JHON_VEGA") {
+                            if (tDay === getJhonVegaDescanso(today)) aDesc = true;
+                        } else if (tDay == a.descanso) aDesc = true;
+                    }
+                    let bDesc = false;
+                    if (b.descanso) {
+                        if (b.descanso === "JHON_VEGA") {
+                            if (tDay === getJhonVegaDescanso(today)) bDesc = true;
+                        } else if (tDay == b.descanso) bDesc = true;
+                    }
+
+                    if (aPico || aNov || aDesc) aPrio = 1;
+                    if (bPico || bNov || bDesc) bPrio = 1;
+                }
+
+                if (aPrio !== bPrio) return bPrio - aPrio;
+                return a.name.localeCompare(b.name);
+            });
+        }
+
         window.renderPersonal = function() {
             const list = document.getElementById('personal-list');
             if (!list) return;
             const search = document.getElementById('search-dom').value.toLowerCase();
             list.innerHTML = '';
 
-            const filtered = domiciliarios.filter(d =>
+            const filtered = sortDomis(domiciliarios.filter(d =>
                 d.name.toLowerCase().includes(search) || d.placa.toLowerCase().includes(search)
-            );
+            ));
 
             filtered.forEach(dom => {
                 const card = document.createElement('div');
@@ -1239,7 +1320,7 @@
                     </div>
                     <div class="actions">
                         <button class="btn-act btn-edit admin-only" onclick="openModal(${dom.id})" title="Editar"><i class="fas fa-edit"></i> <span class="btn-text">Editar</span></button>
-                        <button class="btn-act btn-nov admin-super" onclick="openNov(${dom.id})" title="Novedad"><i class="fas fa-calendar-plus"></i> <span class="btn-text">Novedad</span></button>
+                        <button class="btn-act btn-nov admin-super-tab" onclick="openNov(${dom.id})" title="Novedad"><i class="fas fa-calendar-plus"></i> <span class="btn-text">Novedad</span></button>
                         <button class="btn-act btn-del admin-only" onclick="deleteDom(${dom.id})" title="Eliminar"><i class="fas fa-trash"></i></button>
                     </div>
                 `;
@@ -1308,7 +1389,9 @@
 
                 const body = col.querySelector(`#day-body-${i}`);
 
-                domiciliarios.filter(dom => dom.sede === activeSedeView).forEach(dom => {
+                const filteredDomis = sortDomis(domiciliarios.filter(dom => dom.sede === activeSedeView), dayNum, dateStr, d);
+                
+                filteredDomis.forEach(dom => {
                     const isPico = dom.pico !== "" && dom.pico == dayNum;
                     const isAbsent = dom.novedades && dom.novedades[dateStr];
 
@@ -1325,7 +1408,7 @@
 
                     const item = document.createElement('div');
                     item.className = `sched-item ${isPico ? 'item-pico' : ''} ${isDescansoOrNov ? 'item-nov' : ''}`;
-                    const role = sessionStorage.getItem('domi_role');
+                    const role = localStorage.getItem('domi_role');
                     if (role === 'admin' || role === 'supervisor') {
                         item.style.cursor = 'pointer';
                         item.onclick = () => openNov(dom.id);
@@ -1408,9 +1491,15 @@
         }
 
         window.onload = () => {
-            const savedRole = sessionStorage.getItem('domi_role');
-            if (savedRole) {
+            const savedRole = localStorage.getItem('domi_role');
+            const expiry = localStorage.getItem('domi_expiry');
+            
+            if (savedRole && expiry && Date.now() < parseInt(expiry)) {
                 initApp(savedRole);
+            } else {
+                localStorage.removeItem('domi_role');
+                localStorage.removeItem('domi_expiry');
+                document.getElementById('auth-overlay').style.display = 'flex';
             }
 
             const stored = localStorage.getItem('domifaster_data');
