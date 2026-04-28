@@ -463,6 +463,35 @@
             background: #fff5f5;
         }
 
+        .item-arrived {
+            background: #f0fff4 !important;
+            border-right: 5px solid var(--success);
+        }
+
+        .attendance-check:hover {
+            transform: scale(1.2);
+        }
+
+        .status-badge {
+            font-size: 0.65rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: #e6fffa;
+            color: #00875a;
+            border: 1px solid #b3ffeb;
+        }
+
+        .status-missing {
+            background: #fff5f5;
+            color: #e53e3e;
+            border: 1px solid #fed7d7;
+        }
+
         /* --- MODAL MEJORADO --- */
         .modal-overlay {
             position: fixed;
@@ -1136,6 +1165,17 @@
             modal.style.display = 'flex';
         }
 
+        window.toggleAsistencia = function(domId, dateStr) {
+            const role = localStorage.getItem('domi_role');
+            if (role !== 'admin' && role !== 'supervisor') return;
+
+            const dom = domiciliarios.find(d => d.id == domId);
+            const currentVal = (dom.asistencia && dom.asistencia[dateStr]) || false;
+            const newVal = !currentVal;
+            
+            update(ref(db, `programacion_domis/${domId}/asistencia`), { [dateStr]: newVal });
+        }
+
         let novDomId = null;
         window.openNov = function(id) {
             const role = localStorage.getItem('domi_role');
@@ -1303,7 +1343,10 @@
                 d.name.toLowerCase().includes(search) || d.placa.toLowerCase().includes(search)
             ));
 
+            const todayDateStr = new Date().toLocaleDateString('sv-SE');
+
             filtered.forEach(dom => {
+                const isArrivedToday = dom.asistencia && dom.asistencia[todayDateStr];
                 const card = document.createElement('div');
                 card.className = 'dom-row';
                 card.innerHTML = `
@@ -1311,6 +1354,11 @@
                         <div class="name-header" style="display:flex; align-items:center; gap:10px; justify-content: inherit;">
                             <h3 class="dom-name">${dom.name}</h3>
                             <span class="sede-badge sede-${dom.sede.toLowerCase()}">${dom.sede}</span>
+                            <span class="status-badge ${isArrivedToday ? 'status-active' : 'status-missing'}" 
+                                  style="cursor:pointer;" 
+                                  onclick="event.stopPropagation(); toggleAsistencia(${dom.id}, '${todayDateStr}')">
+                                ${isArrivedToday ? '<i class="fas fa-check"></i> Activo' : 'Por llegar'}
+                            </span>
                         </div>
                         <div class="row-meta">
                             <span><b>Placa:</b> ${dom.placa}</span>
@@ -1372,7 +1420,7 @@
             for (let i = 0; i < 7; i++) {
                 const d = new Date(first);
                 d.setDate(d.getDate() + i);
-                const dateStr = d.toISOString().split('T')[0];
+                const dateStr = d.toLocaleDateString('sv-SE');
                 const dayNum = d.getDay();
 
                 const col = document.createElement('div');
@@ -1394,6 +1442,7 @@
                 filteredDomis.forEach(dom => {
                     const isPico = dom.pico !== "" && dom.pico == dayNum;
                     const isAbsent = dom.novedades && dom.novedades[dateStr];
+                    const isArrived = dom.asistencia && dom.asistencia[dateStr];
 
                     let isDescansoFijo = false;
                     if (dom.descanso) {
@@ -1407,11 +1456,17 @@
                     const isDescansoOrNov = isAbsent || isDescansoFijo;
 
                     const item = document.createElement('div');
-                    item.className = `sched-item ${isPico ? 'item-pico' : ''} ${isDescansoOrNov ? 'item-nov' : ''}`;
+                    item.className = `sched-item ${isPico ? 'item-pico' : ''} ${isDescansoOrNov ? 'item-nov' : ''} ${isArrived ? 'item-arrived' : ''}`;
                     const role = localStorage.getItem('domi_role');
+                    
+                    // Solo permitir click en el item para novedades, el check de asistencia es independiente
                     if (role === 'admin' || role === 'supervisor') {
                         item.style.cursor = 'pointer';
-                        item.onclick = () => openNov(dom.id);
+                        item.onclick = (e) => {
+                            if (!e.target.classList.contains('attendance-check')) {
+                                openNov(dom.id);
+                            }
+                        };
                     }
 
                     let statusHtml = '';
@@ -1419,8 +1474,19 @@
                     if (isDescansoFijo) statusHtml += `<span class="sched-status status-nov" style="color:var(--success);">Descanso Fijo</span>`;
                     if (isAbsent) statusHtml += `<span class="sched-status status-nov">Nov: ${dom.novedades[dateStr]}</span>`;
 
+                    const todayStr = new Date().toLocaleDateString('sv-SE');
+                    const showCheck = (role === 'admin' || role === 'supervisor');
+
                     item.innerHTML = `
-                        <span class="sched-name">${dom.name}</span>
+                        <div style="display:flex; justify-content:space-between; align-items:start; gap:8px;">
+                            <span class="sched-name" style="flex:1;">${dom.name}</span>
+                            ${showCheck ? `
+                                <i class="fas ${isArrived ? 'fa-check-circle' : 'fa-circle-notch'} attendance-check" 
+                                   style="color: ${isArrived ? 'var(--success)' : '#cbd5e0'}; font-size: 1.1rem; cursor: pointer; transition: 0.2s;"
+                                   onclick="event.stopPropagation(); toggleAsistencia(${dom.id}, '${dateStr}')"
+                                   title="${isArrived ? 'Marcar como NO llegado' : 'Marcar como LLEGADO'}"></i>
+                            ` : (isArrived ? '<i class="fas fa-check-circle" style="color: var(--success);"></i>' : '')}
+                        </div>
                         ${statusHtml}
                     `;
                     if (isDescansoFijo && !isAbsent) item.style.borderLeftColor = 'var(--success)';
@@ -1450,7 +1516,7 @@
                 for (let i = 0; i < 7; i++) {
                     const d = new Date(first);
                     d.setDate(d.getDate() + i);
-                    const dateStr = d.toISOString().split('T')[0];
+                    const dateStr = d.toLocaleDateString('sv-SE');
                     const dayNum = d.getDay();
 
                     domiciliarios.filter(dom => dom.sede === sede).forEach(dom => {
