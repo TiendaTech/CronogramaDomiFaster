@@ -83,6 +83,53 @@
             font-weight: 800;
         }
 
+        /* --- STATS BANNER --- */
+        .stats-banner {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-box {
+            background: white;
+            padding: 15px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            transition: 0.3s;
+        }
+        .stat-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--dark);
+            line-height: 1;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #8d99ae;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 600px) {
+            .stats-banner {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .stat-value {
+                font-size: 1.4rem;
+            }
+        }
+
         /* --- HEADER ACTIONS --- */
         .header-grid {
             display: grid;
@@ -94,6 +141,10 @@
 
         .search-area {
             position: relative;
+        }
+        .cal-search-area {
+            flex: 1;
+            max-width: 250px;
         }
 
         .search-area i {
@@ -151,10 +202,85 @@
             background: var(--excel-color);
         }
 
-        .btn-add:hover,
-        .btn-excel:hover {
+        .stat-excel:hover {
             transform: scale(1.05);
             filter: brightness(1.1);
+        }
+
+        /* --- STATS MINI (En Calendario) --- */
+        .stats-mini {
+            display: flex;
+            gap: 20px;
+            background: white;
+            padding: 6px 20px;
+            border-radius: 14px;
+            border: 1px solid #edf2f4;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .stat-mini-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .stat-mini-label {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #8d99ae;
+            margin-bottom: 2px;
+            letter-spacing: 0.5px;
+        }
+        .stat-mini-value {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--dark);
+        }
+
+        @media (max-width: 900px) {
+            .stats-mini {
+                order: 4;
+                width: 100%;
+                justify-content: space-between;
+                gap: 10px;
+                padding: 12px !important;
+            }
+            .stat-mini-value {
+                font-size: 1rem;
+            }
+            .stat-mini-label {
+                font-size: 0.5rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .stats-mini {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                padding: 10px !important;
+                background: #f1f3f5 !important;
+                border-radius: 18px !important;
+                width: 100%;
+                box-sizing: border-box;
+                margin: 0 auto;
+            }
+            .stat-mini-item {
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                background: white;
+                padding: 8px 12px;
+                border-radius: 12px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+                gap: 10px;
+            }
+            .stat-mini-label { 
+                font-size: 0.55rem; 
+                margin-bottom: 0;
+            }
+            .stat-mini-value {
+                font-size: 1rem;
+            }
         }
 
         /* --- TABS --- */
@@ -413,7 +539,6 @@
             margin-bottom: 8px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
             border-left: 5px solid var(--primary);
-            animation: slideIn 0.3s ease-out;
             position: relative;
         }
 
@@ -719,24 +844,70 @@
                 flex-direction: column;
                 align-items: stretch;
                 gap: 15px;
-            }
-
-            .calendar-controls > div[style*="display: flex"] {
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-
-            .calendar-controls .btn-excel {
+                padding: 15px;
+                background: white;
+                border-radius: 24px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+                margin-bottom: 20px;
                 width: 100%;
-                margin-right: 0 !important;
-                margin-bottom: 10px;
-                order: -1;
+                box-sizing: border-box;
             }
 
             .sede-selector {
                 justify-content: center;
+                margin-bottom: 5px;
             }
 
+            .calendar-controls .search-area {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+            }
+
+            .calendar-controls .search-area input {
+                height: 46px !important;
+                border: 2px solid #f1f3f5 !important;
+                background: #f8f9fa !important;
+                border-radius: 14px !important;
+                font-size: 0.9rem !important;
+                padding-left: 45px !important;
+            }
+
+            .calendar-controls .search-area i {
+                left: 18px !important;
+                font-size: 0.9rem !important;
+            }
+
+            /* Fila de Export y Navegación */
+            .calendar-controls > div:last-of-type {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: wrap;
+                gap: 10px !important;
+                justify-content: center !important;
+            }
+
+            .calendar-controls .btn-excel {
+                width: 100% !important;
+                margin: 0 !important;
+                order: -1;
+                height: 46px !important;
+                border-radius: 14px !important;
+            }
+
+            .calendar-controls .btn-act {
+                width: 46px !important;
+                height: 46px !important;
+                border-radius: 14px !important;
+                background: #f8f9fa !important;
+                border: 2px solid #f1f3f5 !important;
+            }
+
+            #week-display {
+                min-width: unset !important;
+                flex: 1;
+                font-size: 0.85rem !important;
+            }
             .modal-content {
                 width: 95%;
                 margin: 10px;
@@ -912,6 +1083,31 @@
                 <div class="sede-selector">
                     <button class="sede-btn active" onclick="switchSedeView('Itagui')" id="btn-v-itagui">ITAGÜÍ</button>
                     <button class="sede-btn" onclick="switchSedeView('Calasanz')" id="btn-v-calasanz">CALASANZ</button>
+                </div>
+
+                <div class="search-area cal-search-area">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-cal" placeholder="Filtrar programación..." oninput="renderCalendar()">
+                </div>
+
+                <!-- --- STATS MINI --- -->
+                <div class="stats-mini">
+                    <div class="stat-mini-item">
+                        <span class="stat-mini-label">Total</span>
+                        <span class="stat-mini-value" id="stat-total">0</span>
+                    </div>
+                    <div class="stat-mini-item">
+                        <span class="stat-mini-label">Pico/Nov</span>
+                        <span class="stat-mini-value" id="stat-pico-nov">0</span>
+                    </div>
+                    <div class="stat-mini-item">
+                        <span class="stat-mini-label">Llegados</span>
+                        <span class="stat-mini-value" id="stat-arrived" style="color: var(--success);">0</span>
+                    </div>
+                    <div class="stat-mini-item">
+                        <span class="stat-mini-label">Faltan</span>
+                        <span class="stat-mini-value" id="stat-missing" style="color: var(--danger);">0</span>
+                    </div>
                 </div>
 
                 <div style="display: flex; gap: 8px; align-items: center;">
@@ -1115,9 +1311,46 @@
         onValue(schedRef, (snapshot) => {
             const data = snapshot.val();
             domiciliarios = data ? Object.values(data) : [];
+            updateStats();
             renderPersonal();
             renderCalendar();
         });
+
+        window.updateStats = function() {
+            const today = new Date();
+            const tDay = today.getDay();
+            const tDateStr = today.toLocaleDateString('sv-SE');
+            
+            // Stats por sede activa
+            const list = domiciliarios.filter(d => d.sede === activeSedeView);
+            
+            let cTotal = list.length;
+            let cPicoNov = 0;
+            let cArrived = 0;
+            let cMissing = 0;
+
+            list.forEach(dom => {
+                const isPico = dom.pico !== "" && dom.pico == tDay;
+                const isAbsent = dom.novedades && dom.novedades[tDateStr];
+                const isArrived = dom.asistencia && dom.asistencia[tDateStr];
+                
+                if (isPico || isAbsent) {
+                    cPicoNov++;
+                }
+
+                if (isArrived) {
+                    cArrived++;
+                } else if (!isPico && !isAbsent) {
+                    // No han llegado y no están en pico/novedad
+                    cMissing++;
+                }
+            });
+
+            document.getElementById('stat-total').innerText = cTotal;
+            document.getElementById('stat-pico-nov').innerText = cPicoNov;
+            document.getElementById('stat-arrived').innerText = cArrived;
+            document.getElementById('stat-missing').innerText = cMissing;
+        }
 
         window.switchTab = function(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1138,7 +1371,9 @@
             activeSedeView = sede;
             document.querySelectorAll('.sede-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-v-' + sede.toLowerCase()).classList.add('active');
+            updateStats();
             renderCalendar();
+            renderPersonal();
         }
 
         window.openModal = function(id = null) {
@@ -1271,64 +1506,20 @@
             }
         }
 
-        // Función de ordenamiento unificada
+        // Función de ordenamiento unificada (Prioriza Pico y Placa/Novedades en programación)
         function sortDomis(list, dayNum = null, dateStr = null, dateObj = null) {
             return list.sort((a, b) => {
-                let aPrio = 0;
-                let bPrio = 0;
-
-                // Si se proporciona un contexto de fecha (Calendario)
                 if (dayNum !== null && dateStr !== null) {
                     const aPico = a.pico !== "" && a.pico == dayNum;
                     const bPico = b.pico !== "" && b.pico == dayNum;
                     const aNov = a.novedades && a.novedades[dateStr];
                     const bNov = b.novedades && b.novedades[dateStr];
                     
-                    let aDesc = false;
-                    if (a.descanso) {
-                        if (a.descanso === "JHON_VEGA") {
-                            if (dayNum === getJhonVegaDescanso(dateObj)) aDesc = true;
-                        } else if (dayNum == a.descanso) aDesc = true;
-                    }
-
-                    let bDesc = false;
-                    if (b.descanso) {
-                        if (b.descanso === "JHON_VEGA") {
-                            if (dayNum === getJhonVegaDescanso(dateObj)) bDesc = true;
-                        } else if (dayNum == b.descanso) bDesc = true;
-                    }
-
-                    if (aPico || aNov || aDesc) aPrio = 1;
-                    if (bPico || bNov || bDesc) bPrio = 1;
-                } else {
-                    // En Vista Personal: Prioridad si tienen Pico/Descanso HOY o alguna novedad registrada
-                    const today = new Date();
-                    const tDay = today.getDay();
-                    const tDate = today.toISOString().split('T')[0];
-
-                    const aPico = a.pico !== "" && a.pico == tDay;
-                    const bPico = b.pico !== "" && b.pico == tDay;
-                    const aNov = (a.novedades && Object.keys(a.novedades).length > 0);
-                    const bNov = (b.novedades && Object.keys(b.novedades).length > 0);
-
-                    let aDesc = false;
-                    if (a.descanso) {
-                        if (a.descanso === "JHON_VEGA") {
-                            if (tDay === getJhonVegaDescanso(today)) aDesc = true;
-                        } else if (tDay == a.descanso) aDesc = true;
-                    }
-                    let bDesc = false;
-                    if (b.descanso) {
-                        if (b.descanso === "JHON_VEGA") {
-                            if (tDay === getJhonVegaDescanso(today)) bDesc = true;
-                        } else if (tDay == b.descanso) bDesc = true;
-                    }
-
-                    if (aPico || aNov || aDesc) aPrio = 1;
-                    if (bPico || bNov || bDesc) bPrio = 1;
+                    let aPrio = (aPico || aNov) ? 1 : 0;
+                    let bPrio = (bPico || bNov) ? 1 : 0;
+                    
+                    if (aPrio !== bPrio) return bPrio - aPrio;
                 }
-
-                if (aPrio !== bPrio) return bPrio - aPrio;
                 return a.name.localeCompare(b.name);
             });
         }
@@ -1437,7 +1628,11 @@
 
                 const body = col.querySelector(`#day-body-${i}`);
 
-                const filteredDomis = sortDomis(domiciliarios.filter(dom => dom.sede === activeSedeView), dayNum, dateStr, d);
+                const search = document.getElementById('search-cal') ? document.getElementById('search-cal').value.toLowerCase() : '';
+                const filteredDomis = sortDomis(domiciliarios.filter(dom => 
+                    dom.sede === activeSedeView && 
+                    (dom.name.toLowerCase().includes(search) || (dom.placa && dom.placa.toLowerCase().includes(search)))
+                ), dayNum, dateStr, d);
                 
                 filteredDomis.forEach(dom => {
                     const isPico = dom.pico !== "" && dom.pico == dayNum;
